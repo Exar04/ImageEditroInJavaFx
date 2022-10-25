@@ -13,5 +13,6 @@
             <Image url="@CatMan.png" />
          </image>
       </ImageView>
+      <Button layoutX="447.0" layoutY="200.0" mnemonicParsing="false" text="Button" />
    </children>
 </AnchorPane>

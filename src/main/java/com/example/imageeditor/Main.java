@@ -1,29 +1,123 @@
 package com.example.imageeditor;
 
+
 import javafx.application.Application;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
 
 public class Main extends Application {
+
+    private List<Filter> filters = Arrays.asList(
+            new Filter("Invert", c -> c.invert()),
+            new Filter("Grayscale", c -> c.grayscale()),
+            new Filter("Black and White", c -> valueOf(c) < 1.5 ? Color.BLACK : Color.WHITE),
+            new Filter("Red", c -> Color.color(1.0, c.getGreen(), c.getBlue())),
+            new Filter("Green", c -> Color.color(c.getRed(), 1.0, c.getBlue())),
+            new Filter("Blue", c -> Color.color(c.getRed(), c.getGreen(), 1.0))
+    );
+
+    private double valueOf(Color c) {
+        return c.getRed() + c.getGreen() + c.getBlue();
+    }
+
+    private Parent createContent() throws MalformedURLException {
+        BorderPane root = new BorderPane();
+        root.setPrefSize(800, 600);
+
+
+//      *************************************************************************************************************
+        Stage primaryStage = new Stage();
+
+        // TODO Auto-generated method stub
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Open Image");
+
+        ImageView imageView = null;
+        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.bmp", "*.png", "*.jpg", "*.gif"));
+        File file = chooser.showOpenDialog(new Stage());
+
+        String imagePath = file.toURI().toURL().toString();
+        System.out.println("File is :" + imagePath);// This line is unnecessary
+//      ***********************************************************************************************************
+        ImageView view1 = new ImageView(new Image(imagePath, true));
+        ImageView view2 = new ImageView();
+
+        MenuBar bar = new MenuBar();
+        Menu menu = new Menu("Filter...");
+
+        filters.forEach(filter -> {
+            MenuItem item = new MenuItem(filter.name);
+            item.setOnAction(e -> {
+                view2.setImage(filter.apply(view1.getImage()));
+            });
+
+            menu.getItems().add(item);
+        });
+
+        bar.getMenus().add(menu);
+
+        root.setTop(bar);
+        root.setCenter(new HBox(view1, view2));
+
+        return root;
+    }
+
+    private static class Filter implements Function<Image, Image> {
+
+        private String name;
+        private Function<Color, Color> colorMap;
+
+        Filter(String name, Function<Color, Color> colorMap) {
+            this.name = name;
+            this.colorMap = colorMap;
+        }
+
+        @Override
+        public Image apply(Image source) {
+            int w = (int) source.getWidth();
+            int h = (int) source.getHeight();
+
+            WritableImage image = new WritableImage(w, h);
+
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    Color c1 = source.getPixelReader().getColor(x, y);
+                    Color c2 = colorMap.apply(c1);
+
+                    image.getPixelWriter().setColor(x, y, c2);
+                }
+            }
+
+            return image;
+        }
+    }
+
     @Override
-    public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("hello-view.fxml"));
-        Scene scene1 = new Scene(root, Color.PALEGREEN);
-        stage.setTitle("IMAGE EDITOR");
-        stage.setScene(scene1);
+    public void start(Stage stage) throws Exception {
+        stage.setScene(new Scene(createContent()));
         stage.show();
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }
+
+
