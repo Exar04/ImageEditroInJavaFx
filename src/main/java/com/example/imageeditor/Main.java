@@ -1,6 +1,5 @@
 package com.example.imageeditor;
 
-
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -15,7 +14,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
@@ -40,38 +44,65 @@ public class Main extends Application {
         BorderPane root = new BorderPane();
         root.setPrefSize(800, 600);
 
+        // Taking input as Image
 
-//      *************************************************************************************************************
         Stage primaryStage = new Stage();
-
-        // TODO Auto-generated method stub
 
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Open Image");
 
         ImageView imageView = null;
-        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.bmp", "*.png", "*.jpg", "*.gif"));
+        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files", "*.bmp", "*.png", "*.jpg", "*.gif"));
         File file = chooser.showOpenDialog(new Stage());
 
         String imagePath = file.toURI().toURL().toString();
         System.out.println("File is :" + imagePath);// This line is unnecessary
 //      ***********************************************************************************************************
-        ImageView view1 = new ImageView(new Image(imagePath, true));
+//        Image inputImage = new Image(imagePath,true);
+        ImageView view1 = new ImageView(new Image(imagePath,true));
         ImageView view2 = new ImageView();
 
         MenuBar bar = new MenuBar();
         Menu menu = new Menu("Filter...");
 
+
         filters.forEach(filter -> {
             MenuItem item = new MenuItem(filter.name);
             item.setOnAction(e -> {
                 view2.setImage(filter.apply(view1.getImage()));
+
+                Image outputImage = filter.apply(view1.getImage());
+                File file2 = chooser.showSaveDialog(new Stage());
+                if(file2 != null){
+                    System.out.println(file2);
+                }
+
             });
 
             menu.getItems().add(item);
         });
 
+        Menu menu2 = new Menu("save");
+        MenuItem SaveAs = new MenuItem("Save as");
+        SaveAs.setOnAction(e -> {
+            File file2 = chooser.showSaveDialog(new Stage());
+            if(file2 != null){
+//                ImageIO.write(outputImage, "jpg", file2.toURI());
+                System.out.println(file2);
+            }
+            System.out.println("Saved");
+        });
+        menu2.getItems().add(SaveAs);
+
+        MenuItem Overwrite = new MenuItem("Overwrite");
+        Overwrite.setOnAction(e -> {
+            System.out.println("Overwritten");
+        });
+        menu2.getItems().add(Overwrite);
+
+
         bar.getMenus().add(menu);
+        bar.getMenus().add(menu2);
 
         root.setTop(bar);
         root.setCenter(new HBox(view1, view2));
